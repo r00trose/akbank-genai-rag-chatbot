@@ -205,3 +205,23 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Custom - Akbank GenAI Project
+.env
+venv/
+env/
+
+# Uploads
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Vector DB
+chroma_db/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
