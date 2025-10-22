@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskRAG</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .main-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            height: calc(100vh - 40px);
+            display: flex;
+            gap: 20px;
+        }
+
+        .left-panel {
+            width: 400px;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            overflow-y: auto; 
+            max-height: 100%;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .logo h1 {
+            color: #667eea;
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .logo p {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .language-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f8f9ff;
+            border-radius: 10px;
+        }
+
+        .lang-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .lang-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            background: #eef1ff;
+            border-color: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .upload-area input {
+            display: none;
+        }
+
+        .upload-area h3 {
+            color: #667eea;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+
+        .file-display {
+            display: none;
+            padding: 25px;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e8f0ff 100%);
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+
+        .file-display.show {
+            display: block;
+        }
+
+        .file-icon-large {
+            font-size: 4rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .file-info-item {
+            padding: 12px 15px;
+            margin: 10px 0;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-info-item strong {
+            color: #667eea;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .file-info-item span {
+            text-align: right;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .success-badge {
+            margin-top: 15px;
+            padding: 15px;
+            background: #4caf50;
+            color: white;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .right-panel {
+            flex: 1;
+            background: white;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding: 25px 30px;
+            background: #ffffff !important;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .chat-header h2 {
+            color: #667eea;
+            font-size: 1.5rem;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            background: #fafafa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 18px 22px;
+            border-radius: 15px;
+            max-width: 75%;
+            line-height: 1.8;
+            word-wrap: break-word;
+            white-space: normal;
+        }
+
+        .user-message {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-message {
+            background: white;
+            color: #333;
+            border: 2px solid #f0f0f0;
+            border-bottom-left-radius: 5px;
+        }
+
+        /* Bot mesajı için özel formatlar */
+        .bot-message h2,
+        .bot-message h3,
+        .bot-message h4 {
+            color: #667eea;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .bot-message h2 {
+            font-size: 1.4rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .bot-message h3 {
+            font-size: 1.2rem;
+        }
+
+        .bot-message h4 {
+            font-size: 1.1rem;
+        }
+
+        .bot-message ul,
+        .bot-message ol {
+            margin: 12px 0;
+            padding-left: 25px;
+        }
+
+        .bot-message li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+
+        .bot-message p {
+            margin: 12px 0;
+            line-height: 1.6;
+        }
+
+        .bot-message strong {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .bot-message code {
+            background: #f0f4ff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: #764ba2;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .bot-message pre {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+            border-left: 3px solid #667eea;
+        }
+
+        .bot-message pre code {
+            background: transparent;
+            padding: 0;
+            color: #333;
+        }
+
+        .bot-message blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+            margin: 15px 0;
+            color: #555;
+            font-style: italic;
+        }
+
+        .chat-input-area {
+            padding: 25px 30px;
+            background: white;
+            border-top: 2px solid #f0f0f0;
+            display: flex;
+            gap: 15px;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            padding: 18px 25px;
+            border: 2px solid #e0e0e0;
+            border-radius: 30px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input-area input:focus {
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 18px 35px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .btn-send {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-clear {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #d32f2f;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(244, 67, 54, 0.4);
+        }
+
+        .loading {
+            display: none;
+            padding: 20px;
+            text-align: center;
+            background: #f0f4ff;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        @media (max-width: 1024px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .left-panel {
+                width: 100%;
+                height: auto;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="logo">
+                <h1>📚 AskRAG</h1>
+                <p id="logoSubtitle">Dökümanlarınızla Sohbet Edin</p>
+            </div>
+
+            <div class="language-selector">
+                <button class="lang-btn active" data-lang="tr">🇹🇷 Türkçe</button>
+                <button class="lang-btn" data-lang="en">🇬🇧 English</button>
+            </div>
+
+            <div class="upload-area" id="uploadArea">
+                <h3 id="uploadTitle">📤 Dosya Yükle</h3>
+                <p id="uploadSubtitle">Tıklayın veya sürükleyip bırakın</p>
+                <p style="color: #888; font-size: 0.9rem; margin-top: 10px;">PDF, DOCX, TXT, PPTX</p>
+                <input type="file" id="fileInput" accept=".pdf,.docx,.txt,.pptx">
+            </div>
+
+            <div class="loading" id="loadingLeft">
+                <p id="loadingText">⏳ Dosya işleniyor...</p>
+            </div>
+
+            <div class="file-display" id="fileDisplay">
+                <div class="file-icon-large" id="fileIconLarge">📄</div>
+                <div id="fileInfoContent"></div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="chat-header">
+                <h2 id="chatHeaderTitle">💬 Sohbet Alanı</h2>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot-message" id="welcomeMessage">
+                    👋 Merhaba! Lütfen sol taraftan analiz etmek istediğiniz dosyayı yükleyin.
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <input type="text" id="questionInput" placeholder="Sorunuzu buraya yazın..." disabled>
+                <button class="btn btn-send" id="sendBtn" disabled>Gönder</button>
+                <button class="btn btn-clear" id="clearBtn">Temizle</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentLanguage = 'tr';
+
+        const uploadArea = document.getElementById('uploadArea');
+        let fileInput = document.getElementById('fileInput');
+        const fileDisplay = document.getElementById('fileDisplay');
+        const fileIconLarge = document.getElementById('fileIconLarge');
+        const fileInfoContent = document.getElementById('fileInfoContent');
+        const chatMessages = document.getElementById('chatMessages');
+        const questionInput = document.getElementById('questionInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const loadingLeft = document.getElementById('loadingLeft');
+        const langBtns = document.querySelectorAll('.lang-btn');
+
+        const fileIcons = {
+            'pdf': '📕',
+            'docx': '📘',
+            'txt': '📄',
+            'pptx': '📊'
+        };
+
+        langBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                langBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentLanguage = btn.dataset.lang;
+                updateUILanguage();
+            });
+        });
+
+        function updateUILanguage() {
+            const logoSubtitle = document.getElementById('logoSubtitle');
+            const uploadTitle = document.getElementById('uploadTitle');
+            const uploadSubtitle = document.getElementById('uploadSubtitle');
+            const loadingText = document.getElementById('loadingText');
+            const chatHeaderTitle = document.getElementById('chatHeaderTitle');
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            
+            if (currentLanguage === 'en') {
+                logoSubtitle.textContent = 'Chat with Your Documents';
+                uploadTitle.textContent = 'Upload File';
+                uploadSubtitle.textContent = 'Click or drag and drop';
+                loadingText.textContent = 'Processing file...';
+                chatHeaderTitle.textContent = '💬 Chat Area';
+                welcomeMessage.textContent = '👋 Hello! Please upload a document from the left panel to analyze.';
+                questionInput.placeholder = 'Type your question here...';
+                sendBtn.textContent = 'Send';
+                clearBtn.textContent = 'Clear';
+            } else {
+                logoSubtitle.textContent = 'Dökümanlarınızla Sohbet Edin';
+                uploadTitle.textContent = 'Dosya Yükle';
+                uploadSubtitle.textContent = 'Tıklayın veya sürükleyip bırakın';
+                loadingText.textContent = 'Dosya işleniyor...';
+                chatHeaderTitle.textContent = '💬 Sohbet Alanı';
+                welcomeMessage.textContent = '👋 Merhaba! Lütfen sol taraftan analiz etmek istediğiniz dosyayı yükleyin.';
+                questionInput.placeholder = 'Sorunuzu buraya yazın...';
+                sendBtn.textContent = 'Gönder';
+                clearBtn.textContent = 'Temizle';
+            }
+        }
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            loadingLeft.style.display = 'block';
+            fileDisplay.classList.remove('show');
+            
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    fileIconLarge.textContent = fileIcons[data.file_type] || '📄';
+                    
+                    fileIconLarge.style.fontSize = '28px'; 
+                    fileIconLarge.style.display = 'inline-block'; 
+                    fileIconLarge.style.marginLeft = 'auto';
+                    fileIconLarge.style.marginRight = 'auto';
+
+                    if (fileIconLarge.parentElement) {
+        fileIconLarge.parentElement.style.textAlign = 'center';
+    }
+
+                    const labels = currentLanguage === 'en' ? {
+                        fileName: '📁 File Name:',
+                        fileType: '📊 File Type:',
+                        pageCount: '📄 Page Count:',
+                        success: '✅ File uploaded successfully!'
+                    } : {
+                        fileName: '📁 Dosya Adı:',
+                        fileType: '📊 Dosya Tipi:',
+                        pageCount: '📄 Sayfa Sayısı:',
+                        success: '✅ Dosya başarıyla yüklendi!'
+                    };
+                    
+                    fileInfoContent.innerHTML = `
+                        <div class="file-info-item">
+                            <strong>${labels.fileName}</strong>
+                            <span>${data.filename}</span>
+                        </div>
+                        <div class="file-info-item">
+                            <strong>${labels.fileType}</strong>
+                            <span>${data.file_type.toUpperCase()}</span>
+                        </div>
+                        <div class="file-info-item">
+                            <strong>${labels.pageCount}</strong>
+                            <span>${data.page_count}</span>
+                        </div>
+                        <div class="success-badge">
+                            ${labels.success}
+                        </div>
+                    `;
+                    
+                    fileDisplay.classList.add('show');
+                    
+                    const successMsg = currentLanguage === 'en' 
+                        ? `${data.filename} uploaded successfully! You can now ask questions.`
+                        : `${data.filename} başarıyla yüklendi! Şimdi sorular sorabilirsiniz.`;
+                    
+                    addMessage(successMsg, 'bot');
+                    questionInput.disabled = false;
+                    sendBtn.disabled = false;
+                    questionInput.focus();
+                } else {
+                    const errorMsg = currentLanguage === 'en' ? 'Error: ' + data.error : 'Hata: ' + data.error;
+                    alert(errorMsg);
+                }
+            } catch (error) {
+                const errorMsg = currentLanguage === 'en' ? 'File upload error: ' + error.message : 'Dosya yükleme hatası: ' + error.message;
+                alert(errorMsg);
+            } finally {
+                loadingLeft.style.display = 'none';
+            }
+        });
+
+        sendBtn.addEventListener('click', askQuestion);
+        questionInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') askQuestion();
+        });
+
+        async function askQuestion() {
+            const question = questionInput.value.trim();
+            if (!question) return;
+
+            addMessage(question, 'user');
+            questionInput.value = '';
+
+            try {
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        question: question,
+                        language: currentLanguage 
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.answer) {
+                    addMessage(data.answer, 'bot');
+                } else if (data.error) {
+                    addMessage('❌ ' + (currentLanguage === 'en' ? 'Error: ' : 'Hata: ') + data.error, 'bot');
+                }
+            } catch (error) {
+                addMessage('❌ ' + (currentLanguage === 'en' ? 'Connection error: ' : 'Bağlantı hatası: ') + error.message, 'bot');
+            }
+        }
+
+        clearBtn.addEventListener('click', async () => {
+            const confirmMsg = currentLanguage === 'en'
+                ? 'Chat history will be deleted. Are you sure?'
+                : 'Konuşma geçmişi silinecek. Emin misiniz?';
+            
+            if (!confirm(confirmMsg)) return;
+            
+            try {
+                await fetch('/clear', { method: 'POST' });
+                
+                const newChatMsg = currentLanguage === 'en'
+                    ? '✨ New conversation started! You can upload a document from the left panel.'
+                    : '✨ Yeni konuşma başladı! Sol taraftan dosya yükleyebilirsiniz.';
+                
+                chatMessages.innerHTML = `<div class="message bot-message">${newChatMsg}</div>`;
+                questionInput.disabled = true;
+                sendBtn.disabled = true;
+                fileDisplay.classList.remove('show');
+            } catch (error) {
+                const errorMsg = currentLanguage === 'en'
+                    ? 'Clear error: ' + error.message
+                    : 'Temizleme hatası: ' + error.message;
+                alert(errorMsg);
+            }
+        });
+
+        // Bot cevaplarını düzenli HTML formatında göster
+        function formatBotResponse(text) {
+            if (!text) return '';
+            
+            let formatted = text;
+            
+            // Kod bloklarını koru (önce işaretle)
+            const codeBlocks = [];
+            formatted = formatted.replace(/```([\s\S]*?)```/g, function(match, code) {
+                codeBlocks.push(code);
+                return '___CODE_BLOCK_' + (codeBlocks.length - 1) + '___';
+            });
+            
+            // Inline kod
+            formatted = formatted.replace(/`([^`]+)`/g, '<code>$1</code>');
+            
+            // Kalın yazı
+            formatted = formatted.replace(/\*\*([^\*]+)\*\*/g, '<strong>$1</strong>');
+            
+            // Başlıklar
+            formatted = formatted.replace(/^### (.+)$/gm, '<h4>$1</h4>');
+            formatted = formatted.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+            formatted = formatted.replace(/^# (.+)$/gm, '<h2>$1</h2>');
+            
+            // Satırları işle
+            let lines = formatted.split('\n');
+            let html = [];
+            let inList = false;
+            
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim();
+                
+                if (!line) {
+                    if (inList) {
+                        html.push('</ul>');
+                        inList = false;
+                    }
+                    continue;
+                }
+                
+                // Liste kontrolü
+                if (line.startsWith('- ') || line.startsWith('* ')) {
+                    if (!inList) {
+                        html.push('<ul>');
+                        inList = true;
+                    }
+                    html.push('<li>' + line.substring(2) + '</li>');
+                }
+                // Numaralı liste
+                else if (line.match(/^\d+\.\s/)) {
+                    if (!inList) {
+                        html.push('<ul>');
+                        inList = true;
+                    }
+                    html.push('<li>' + line.replace(/^\d+\.\s/, '') + '</li>');
+                }
+                // Normal satır
+                else {
+                    if (inList) {
+                        html.push('</ul>');
+                        inList = false;
+                    }
+                    
+                    if (!line.startsWith('<h') && !line.startsWith('<code')) {
+                        html.push('<p>' + line + '</p>');
+                    } else {
+                        html.push(line);
+                    }
+                }
+            }
+            
+            if (inList) {
+                html.push('</ul>');
+            }
+            
+            formatted = html.join('');
+            
+            // Kod bloklarını geri koy
+            for (let i = 0; i < codeBlocks.length; i++) {
+                formatted = formatted.replace('___CODE_BLOCK_' + i + '___', '<pre><code>' + codeBlocks[i] + '</code></pre>');
+            }
+            
+            return formatted;
+        }
+
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + sender + '-message';
+            
+            if (sender === 'user') {
+                messageDiv.textContent = text;
+            } else {
+                messageDiv.innerHTML = formatBotResponse(text);
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    </script>
+</body>
+</html>
