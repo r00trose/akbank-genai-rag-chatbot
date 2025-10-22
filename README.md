@@ -4,6 +4,14 @@ ASKRAG is an intelligent RAG (Retrieval Augmented Generation) based chatbot that
 
 This project was developed as part of the **Akbank GenAI Bootcamp** to demonstrate practical implementation of RAG architecture for document analysis and question-answering systems.
 
+## 📷 Proje Ekran Görüntüleri
+
+### 1. Ana Ekran ve Yükleme Arayüzü
+![Ana Sayfa](screenshots/1.png)
+
+### 2. Sohbet ve Cevap Örneği
+![Çalışan Chatbot](screenshots/2.png)
+
 ## 🎯 Project Purpose
 
 ASKRAG solves the challenge of quickly extracting information from lengthy documents. Instead of manually searching through pages, users can:
