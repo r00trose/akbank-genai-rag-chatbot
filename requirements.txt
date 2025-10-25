@@ -10,3 +10,4 @@ sentence-transformers
 PyPDF2
 python-docx
 python-pptx
+Werkzeug==3.0.1
